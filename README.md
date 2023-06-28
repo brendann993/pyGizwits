@@ -3,6 +3,8 @@
 This package is a wrapper for Gizwits OpenAPI and websocket API.
 It allows you get connect using the App ID for the device type you have registered, then register for websocket updates for the devices you choose.
 
+Credit to cdpuk as alot of the code has been inspired by https://github.com/cdpuk/ha-bestway
+
 **Example Usage**
 
 The below will login to the US api and get the devices currently bound to your devices. It will then fetch their current status as well as then subscribe to receive the websocket updates for the devices.
