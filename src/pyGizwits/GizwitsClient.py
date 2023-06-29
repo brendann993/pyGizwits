@@ -195,8 +195,8 @@ class GizwitsClient(EventEmitter):
         limit = 20
         skip = 0
         more = True
+        url = "/app/bindings"
         while more:
-            url = "/app/bindings"
             query = f"?show_disabled=0&limit={limit}&skip={skip}"
             endpoint = url + query
             try:
@@ -253,23 +253,22 @@ class GizwitsClient(EventEmitter):
         Raises:
             GizwitsDeviceNotBound: if the device is not bound.
         """
-        if device_id in self.bindings.items():
-            device_info = self.bindings[device_id]
-            logger.debug(f"Fetching device {device_id}")
-            latest_data = await self._get(f"/app/devdata/{device_id}/latest")
-            # Get the age of the data according to the API
-            api_update_timestamp = latest_data["updated_at"]
-
-            # Zero indicates the device is offline
-            # This has been observed after a device was offline for a few months
-            if api_update_timestamp == 0:
-                # In testing, the 'attrs' dictionary has been observed to be empty
-                return GizwitsDeviceReport(device_info, None)
-
-            device_status = GizwitsDeviceStatus(latest_data["updated_at"], attributes=latest_data)
-            return GizwitsDeviceReport(device_info, device_status)
-        else:
+        if device_id not in self.bindings.items():
             raise GizwitsDeviceNotBound()
+        device_info = self.bindings[device_id]
+        logger.debug(f"Fetching device {device_id}")
+        latest_data = await self._get(f"/app/devdata/{device_id}/latest")
+        # Get the age of the data according to the API
+        api_update_timestamp = latest_data["updated_at"]
+
+        # Zero indicates the device is offline
+        # This has been observed after a device was offline for a few months
+        if api_update_timestamp == 0:
+            # In testing, the 'attrs' dictionary has been observed to be empty
+            return GizwitsDeviceReport(device_info, None)
+
+        device_status = GizwitsDeviceStatus(latest_data["updated_at"], attributes=latest_data)
+        return GizwitsDeviceReport(device_info, device_status)
 
     async def fetch_devices(self) -> dict[str, GizwitsDeviceReport]:
         """

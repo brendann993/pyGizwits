@@ -131,11 +131,8 @@ class WebSocketConnection:
             elif message.type == WSMsgType.BINARY:
                 # Handle binary message
                 pass
-            elif message.type == WSMsgType.CLOSED:
+            elif message.type in [WSMsgType.CLOSED, WSMsgType.ERROR]:
                 # Connection closed
-                break
-            elif message.type == WSMsgType.ERROR:
-                # Connection error
                 break
 
     async def handle_message(self, message: str):
@@ -151,7 +148,7 @@ class WebSocketConnection:
             data = json.loads(message)
             cmd = data.get('cmd')
             data = data.get('data')
-            
+
             if cmd and data:
                 # Handle the command and data accordingly
                 if cmd == "login_res":
@@ -162,9 +159,8 @@ class WebSocketConnection:
                     await self.handle_s2c_notification (data)
                 else:
                     logger.debug(f"Received unknown command: {cmd}")
-                    pass
             elif cmd == "pong":
-                logger.debug(f"Received pong")
+                logger.debug("Received pong")
             else:
                 logger.warn(f"Received invalid message: {message}")
         except json.JSONDecodeError:
