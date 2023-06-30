@@ -31,7 +31,7 @@ class GizwitsUserToken:
     user_id: str
     user_token: str
     expiry: int
-    
+
 class GizwitsClient(EventEmitter):
     class Region(Enum):
         US = "us"
@@ -49,7 +49,7 @@ class GizwitsClient(EventEmitter):
         self.bindings: Dict[str, GizwitsDevice] = {}
         self.sockets: Dict[str, WebSocketConnection] = {}
         self._session = session
-        
+
     @staticmethod
     def get_base_url(region: Region) -> str:
         if region == GizwitsClient.Region.US:
@@ -62,7 +62,7 @@ class GizwitsClient(EventEmitter):
     def token_expired(self):
         """
         Emits a 'token_expired' event.
-        
+
         Returns:
             None
         """
@@ -101,7 +101,7 @@ class GizwitsClient(EventEmitter):
     async def login(self, username: str, password: str) -> None:
         """
         Login to the Gizwits OpenAPI.
-        
+
         Sends a POST request to the login endpoint with the given username and password.
         The X-Gizwits-Application-Id header is set to the app_id stored in the class.
         The payload contains the given username, password, and language code.
@@ -127,12 +127,12 @@ class GizwitsClient(EventEmitter):
     async def refresh_token(self, expiry_time, username, password):
         """
         Handle token expiry.
-        
+
         Asynchronously refreshes the token by sleeping until the token expiry time,
         then calling the token_expired() method and refreshing the token by calling
         the login method with the provided username and password.
-        
-        Args:   
+
+        Args:
             expiry_time (int): An integer representing the duration in seconds until the token expires.
             username (str): A string representing the username to use for refreshing the token.
             password (str): A string representing the password to use for refreshing the token.
@@ -239,17 +239,17 @@ class GizwitsClient(EventEmitter):
     async def refresh_bindings(self) -> None:
         """
         Asynchronously refreshes the bindings of the current session and emits a 'bindings_refreshed' event with the updated bindings.
-        
+
         Returns:
             None
         """
         self.bindings = await self._get_bindings()
         self.emit('bindings_refreshed', self.bindings)
-        
+
     async def fetch_device(self, device_id: str) -> GizwitsDeviceReport:
         """
         Asynchronously fetches the latest data for a specific device.
-        
+
         Args:
             device_id (str): The ID of the device to fetch.
         Returns:
@@ -277,7 +277,7 @@ class GizwitsClient(EventEmitter):
     async def fetch_devices(self) -> dict[str, GizwitsDeviceReport]:
         """
         Asynchronously fetches the latest data for all currently bound devices.
-        
+
         Only devices that are currently bound will be included in the results.
 
         Returns:
@@ -309,7 +309,7 @@ class GizwitsClient(EventEmitter):
             device_status = GizwitsDeviceStatus(latest_data["updated_at"], attributes=latest_data)
             results[did] = GizwitsDeviceReport(device_info, device_status)
         return results
-    
+
     async def Subscribe_to_device_updates(self, device: GizwitsDevice):
         """
         Subscribes to updates from a given GizwitsDevice via a WebSocket connection.
@@ -336,7 +336,7 @@ class GizwitsClient(EventEmitter):
     async def got_device_status_update(self, device_update: dict):
         """
         Asynchronous function that takes in a device update and produces a GizwitsDeviceReport.
-        
+
         Args:
             device_update (dict): A dictionary containing information about the device.
         Returns:

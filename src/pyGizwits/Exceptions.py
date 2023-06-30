@@ -5,7 +5,7 @@ class GizwitsException(Exception):
 class GizwitsOfflineException(GizwitsException):
     """Device is offline."""
 
-    
+
 class GizwitsDeviceNotBound(GizwitsException):
     """Device is not bound to this user."""
 
