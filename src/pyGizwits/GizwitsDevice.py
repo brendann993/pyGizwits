@@ -26,6 +26,12 @@ class GizwitsDevice:
     _socketType: str = "ssl_socket"
 
     def get_websocketConnInfo(self) -> tuple[dict[str, str], str]:
+        """
+        Get the WebSocket connection information.
+        Returns:
+            A tuple containing a dictionary with keys 'host', 'path', 'pre', and 'port',
+            and a string representing the WebSocket connection URL.
+        """
         ws_info: Dict[str, str] = {'host': self.host, 'path': '/ws/app/v1'}
         if self._socketType == "ssl_socket":
             ws_info['pre'] = "wss://"

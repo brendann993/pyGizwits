@@ -26,7 +26,7 @@ from .WebSocketConnection import WebSocketConnection
 
 @dataclass
 class GizwitsUserToken:
-    """User authentication token, obtained (and ideally stored) following a successful login."""
+    """User authentication token, obtained following a successful login."""
 
     user_id: str
     user_token: str
@@ -119,8 +119,8 @@ class GizwitsClient(EventEmitter):
         Sends a POST request to the login endpoint with the given username and password.
         The X-Gizwits-Application-Id header is set to the app_id stored in the class.
         The payload contains the given username, password, and language code.
-        If the request is successful, the response json is extracted to set the token and uid
-        class variables. Finally, the uid and token are returned as a tuple.
+        If the request is successful, the response json is extracted to set the token and
+        uid class variables. Finally, the uid and token are returned as a tuple.
 
         Args:
             username (str): The username for the login request.
@@ -147,9 +147,10 @@ class GizwitsClient(EventEmitter):
         the login method with the provided username and password.
 
         Args:
-            expiry_time (int): An integer representing the duration in seconds until the token expires.
-            username (str): A string representing the username to use for refreshing the token.
-            password (str): A string representing the password to use for refreshing the token.
+            expiry_time (int): An integer representing the duration 
+            in seconds until the token expires.
+            username (str): A string representing the username.
+            password (str): A string representing the password.
         Returns:
             None
         """
@@ -182,14 +183,15 @@ class GizwitsClient(EventEmitter):
 
     async def _post(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Asynchronously sends a POST request to the specified endpoint with the given data.
+        Asynchronously sends a POST request to the specified endpoint with data.
 
         Args:
             endpoint (str): The endpoint to send the request to.
             data (Dict[str, Any]): The data to send with the request.
 
         Returns:
-            Dict[str, Any]: A dictionary representing the JSON data returned by the response.
+            Dict[str, Any]: A dictionary representing the JSON data 
+            returned by the response.
         """
         url = urljoin(self.base_url, endpoint)
         headers = {
@@ -203,10 +205,13 @@ class GizwitsClient(EventEmitter):
 
     async def _get_bindings(self) -> Dict[str, GizwitsDevice]:
         """
-        Asynchronously retrieves device bindings from Gizwits using the '/app/bindings' endpoint.
+        Asynchronously retrieves device bindings from Gizwits.
+
+        Using the '/app/bindings' endpoint
 
         Returns:
-            Dict[str, GizwitsDevice]: A dictionary containing the bound devices, with each device's 'did' as the key and a GizwitsDevice instance as the value.
+            Dict[str, GizwitsDevice]: A dictionary containing the bound devices, 
+            with each device's 'did' as the key and a GizwitsDevice instance as the value.
 
         Raises:
             GizwitsException: if an error occurs while retrieving the device bindings.
@@ -258,7 +263,9 @@ class GizwitsClient(EventEmitter):
 
     async def refresh_bindings(self) -> None:
         """
-        Asynchronously refreshes the bindings of the current session and emits a 'bindings_refreshed' event with the updated bindings.
+        Asynchronously refreshes the bindings of the current session 
+
+        Emits a 'bindings_refreshed' event with the updated bindings.
 
         Returns:
             None
@@ -360,7 +367,7 @@ class GizwitsClient(EventEmitter):
 
     async def got_device_status_update(self, device_update: dict):
         """
-        Asynchronous function that takes in a device update and produces a GizwitsDeviceReport.
+        Asynchronously takes in a device update and produces a GizwitsDeviceReport.
 
         Args:
             device_update (dict): A dictionary containing information about the device.

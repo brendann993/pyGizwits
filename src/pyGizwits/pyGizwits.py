@@ -29,9 +29,9 @@ class ErrorCodes:
     def get_exception(cls, error_code):
         """
         Get the exception class corresponding to the given error code.
-        
-        Args: 
-            error_code (error_code): The error code for which to retrieve the exception class.
+
+        Args:
+            error_code (error_code): The error code to lookup.
         Returns:
             GizwitsException: The exception class corresponding to the given error code.
         """
