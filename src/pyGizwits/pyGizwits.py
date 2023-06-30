@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class ErrorCodes:
     """An exception returned via the API."""
-    
+
     ERROR_CODES = {
         9004: GizwitsTokenInvalidException,
         9005: GizwitsUserDoesNotExistException,
