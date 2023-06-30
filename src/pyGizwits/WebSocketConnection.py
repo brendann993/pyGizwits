@@ -117,6 +117,7 @@ class WebSocketConnection:
         await self.send(payload)
 
     async def receive_messages(self, ws: ClientWebSocketResponse):
+        # sourcery skip: merge-comparisons, merge-duplicate-blocks, remove-redundant-if
         """
         Asynchronously receives messages from a web socket connection.
 
@@ -151,7 +152,7 @@ class WebSocketConnection:
             data = json.loads(message)
             cmd = data.get('cmd')
             data = data.get('data')
-            
+
             if cmd and data:
                 # Handle the command and data accordingly
                 if cmd == "login_res":
@@ -162,9 +163,8 @@ class WebSocketConnection:
                     await self.handle_s2c_notification (data)
                 else:
                     logger.debug(f"Received unknown command: {cmd}")
-                    pass
             elif cmd == "pong":
-                logger.debug(f"Received pong")
+                logger.debug("Received pong")
             else:
                 logger.warn(f"Received invalid message: {message}")
         except json.JSONDecodeError:

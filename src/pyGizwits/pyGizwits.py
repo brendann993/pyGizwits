@@ -51,7 +51,6 @@ async def raise_for_status(response: ClientResponse) -> None:
     except json.JSONDecodeError:
         response.raise_for_status()
     error_code = api_error.get("error_code", 0) if api_error else 0
-    exception_class = ErrorCodes.get_exception(error_code)
-    if exception_class:
+    if exception_class := ErrorCodes.get_exception(error_code):
         raise exception_class()
     response.raise_for_status()
