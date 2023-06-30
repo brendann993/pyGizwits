@@ -16,6 +16,7 @@ from pyGizwits.pyGizwits import ErrorCodes, logger
 
 
 class WebSocketConnection:
+    """WebSocket connection to the Gizwits server."""
     def __init__(self, session: ClientSession, GizwitsClient, websocket_info):
         self.client: GizwitsClient = GizwitsClient
         self.session = session
@@ -63,7 +64,7 @@ class WebSocketConnection:
         Logs into the Websocket server.
 
         This asynchronous function logs in by sending a JSON payload to the server.
-        The payload includes the user's app ID, UID, token, p0_type, 
+        The payload includes the user's app ID, UID, token, p0_type,
         heartbeat interval, and auto_subscribe. The function returns nothing.
 
         Returns:
@@ -98,6 +99,13 @@ class WebSocketConnection:
         await self.send(payload)
 
     async def _send_ping_periodically(self):
+        """
+        Send a ping periodically.
+        This function is an asynchronous function that sends a ping message at regular intervals. It uses the `_send_ping()` method to send the ping message and the `asyncio.sleep()` function to introduce a delay between each ping message.
+
+        Returns:
+            None
+        """
         while True:
             await self._send_ping()
             await asyncio.sleep(self.ping_interval)

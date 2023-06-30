@@ -34,7 +34,9 @@ class GizwitsUserToken:
 
 
 class GizwitsClient(EventEmitter):
+    """Gizwits client representing a connection to the Gizwits server."""
     class Region(Enum):
+        """Gizwits region."""
         US = "us"
         EU = "eu"
         DEFAULT = "default"
@@ -57,6 +59,13 @@ class GizwitsClient(EventEmitter):
 
     @staticmethod
     def get_base_url(region: Region) -> str:
+        """
+        Retrieves the base URL for the given region.
+        Args:
+            region (Region): The region for which to retrieve the base URL.
+        Returns:
+            str: The base URL corresponding to the given region.
+        """
         if region == GizwitsClient.Region.US:
             return "https://usapi.gizwits.com"
         if region == GizwitsClient.Region.EU:
@@ -95,7 +104,7 @@ class GizwitsClient(EventEmitter):
         async with self._session.post(url, headers=headers, json=payload) as response:
             await raise_for_status(response)
 
-            # Extract the token and uid from the response and set it to the class variables
+            # Extract the token and uid from the response
             data = await response.json()
 
         # Return the uid and token
@@ -281,7 +290,7 @@ class GizwitsClient(EventEmitter):
             return GizwitsDeviceReport(device_info, None)
 
         device_status = GizwitsDeviceStatus(
-            latest_data["updated_at"], 
+            latest_data["updated_at"],
             attributes=latest_data
         )
         return GizwitsDeviceReport(device_info, device_status)
@@ -319,7 +328,7 @@ class GizwitsClient(EventEmitter):
                 continue
 
             device_status = GizwitsDeviceStatus(
-                latest_data["updated_at"], 
+                latest_data["updated_at"],
                 attributes=latest_data
             )
             results[did] = GizwitsDeviceReport(device_info, device_status)
@@ -335,7 +344,6 @@ class GizwitsClient(EventEmitter):
             None
         """
         sockets = self.sockets
-        """websocket_info, websocket_url = self._get_websocketConnInfo(device)"""
         websocket_info, websocket_url = device.get_websocketConnInfo()
         if websocket_url in sockets:
             logger.debug(f"Using existing websocket for {websocket_url}")
@@ -360,7 +368,7 @@ class GizwitsClient(EventEmitter):
         did = device_update["did"]
         device_info = self.bindings.get(did)
         device_status = GizwitsDeviceStatus(
-            int(time()), 
+            int(time()),
             attributes=device_update["attrs"]
         )
         result = GizwitsDeviceReport(device_info, device_status)

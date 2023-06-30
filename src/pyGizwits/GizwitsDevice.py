@@ -35,8 +35,7 @@ class GizwitsDevice:
             ws_info['port'] = str(self.ws_port)
         return (
             ws_info,
-            f"{ws_info['pre'] + ws_info['host'] + ':' + 
-            ws_info['port'] + ws_info['path']}"
+            f"{ws_info['pre'] + ws_info['host'] + ':' + ws_info['port'] + ws_info['path']}"
         )
 
 

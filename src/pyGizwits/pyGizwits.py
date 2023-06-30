@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class ErrorCodes:
+    """An exception returned via the API."""
     ERROR_CODES = {
         9004: GizwitsTokenInvalidException,
         9005: GizwitsUserDoesNotExistException,
@@ -25,6 +26,14 @@ class ErrorCodes:
 
     @classmethod
     def get_exception(cls, error_code):
+        """
+        Get the exception class corresponding to the given error code.
+        
+        Args: 
+            error_code (error_code): The error code for which to retrieve the exception class.
+        Returns:
+            GizwitsException: The exception class corresponding to the given error code.
+        """
         return cls.ERROR_CODES.get(error_code, GizwitsException)
 
 
@@ -32,7 +41,7 @@ async def raise_for_status(response: ClientResponse) -> None:
     """
     Handles errors in a request.
 
-    Checks if the provided response is OK. If not, tries to decode the error message 
+    Checks if the provided response is OK. If not, tries to decode the error message
     from the response JSON. If successful, raises an exception based on the error
     code. If the error message cannot be decoded or the error code is not recognized,
     raises an HTTPError with the status code of the response. Returns None otherwise.
