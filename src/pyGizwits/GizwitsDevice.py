@@ -6,6 +6,7 @@ from pyGizwits.pyGizwits import logger
 
 _CONNECTIVITY_TIMEOUT = 1000
 
+
 @dataclass
 class GizwitsDevice:
     """A device under a user's account."""
@@ -33,8 +34,9 @@ class GizwitsDevice:
             ws_info['pre'] = "ws://"
             ws_info['port'] = str(self.ws_port)
         return (
-            ws_info, 
-            f"{ws_info['pre'] + ws_info['host'] + ':' + ws_info['port'] + ws_info['path']}"
+            ws_info,
+            f"{ws_info['pre'] + ws_info['host'] + ':' + 
+            ws_info['port'] + ws_info['path']}"
         )
 
 
@@ -47,13 +49,13 @@ class GizwitsDeviceStatus:
 
     @property
     def online(self) -> bool:
-        """Determine whether the device is online based on the age of the latest update."""
+        """Determine if the device is online based on the age of the latest update."""
         return self.timestamp > (time() - _CONNECTIVITY_TIMEOUT)
 
 
 @dataclass
 class GizwitsDeviceReport:
-    """A device report, which combines device metadata with a current status snapshot."""
+    """Combines device metadata with a current status snapshot."""
 
     device: GizwitsDevice
     status: GizwitsDeviceStatus | None

@@ -32,10 +32,10 @@ async def raise_for_status(response: ClientResponse) -> None:
     """
     Handles errors in a request.
 
-    Checks if the provided response is OK. If not, tries to decode the error message from
-    the response JSON. If successful, raises an exception based on the error code. If the
-    error message cannot be decoded or the error code is not recognized, raises an HTTPError
-    with the status code of the response. Returns None otherwise.
+    Checks if the provided response is OK. If not, tries to decode the error message 
+    from the response JSON. If successful, raises an exception based on the error
+    code. If the error message cannot be decoded or the error code is not recognized,
+    raises an HTTPError with the status code of the response. Returns None otherwise.
 
     Args:
         response (ClientResponse): A ClientResponse object from an aiohttp request.

@@ -32,13 +32,18 @@ class GizwitsUserToken:
     user_token: str
     expiry: int
 
+
 class GizwitsClient(EventEmitter):
     class Region(Enum):
         US = "us"
         EU = "eu"
         DEFAULT = "default"
 
-    def __init__(self, session: ClientSession, app_id: str, region: Region = Region.DEFAULT):
+    def __init__(
+        self, session: ClientSession,
+        app_id: str,
+        region: Region = Region.DEFAULT
+    ):
         super().__init__()
         self.base_url = self.get_base_url(region)
         self.region = region
@@ -87,12 +92,11 @@ class GizwitsClient(EventEmitter):
         payload = {"username": username, "password": password, "lang": "en"}
 
         # Send a POST request and get the response
-        async with ClientSession() as session:
-            async with session.post(url, headers=headers, json=payload) as response:
-                await raise_for_status(response)
+        async with self._session.post(url, headers=headers, json=payload) as response:
+            await raise_for_status(response)
 
-                # Extract the token and uid from the response and set it to the class variables
-                data = await response.json()
+            # Extract the token and uid from the response and set it to the class variables
+            data = await response.json()
 
         # Return the uid and token
         return GizwitsUserToken(data["uid"], data["token"], data["expire_at"])
@@ -114,7 +118,7 @@ class GizwitsClient(EventEmitter):
             None
         Raises:
             GizwitsException: If an error occurs during the login process.
-        """       
+        """
         login_data = await self.get_token(username, password)
         self.token = login_data.user_token
         self.uid = login_data.user_id
@@ -155,7 +159,10 @@ class GizwitsClient(EventEmitter):
             Dict[str, Any]: A dictionary containing the response data.
         """
         url = urljoin(self.base_url, endpoint)
-        headers = {"X-Gizwits-Application-Id": self.app_id, "X-Gizwits-User-Token": self.token}
+        headers = {
+            "X-Gizwits-Application-Id": self.app_id,
+            "X-Gizwits-User-Token": self.token
+        }
 
         async with self._session.get(url, headers=headers) as response:
             await raise_for_status(response)
@@ -174,7 +181,10 @@ class GizwitsClient(EventEmitter):
             Dict[str, Any]: A dictionary representing the JSON data returned by the response.
         """
         url = urljoin(self.base_url, endpoint)
-        headers = {"X-Gizwits-Application-Id": self.app_id, "X-Gizwits-User-Token": self.token}
+        headers = {
+            "X-Gizwits-Application-Id": self.app_id,
+            "X-Gizwits-User-Token": self.token
+        }
         headers = {k: v if v is not None else "" for k, v in headers.items()}
         async with self._session.post(url, headers=headers, json=data) as response:
             await raise_for_status(response)
@@ -270,7 +280,10 @@ class GizwitsClient(EventEmitter):
             # In testing, the 'attrs' dictionary has been observed to be empty
             return GizwitsDeviceReport(device_info, None)
 
-        device_status = GizwitsDeviceStatus(latest_data["updated_at"], attributes=latest_data)
+        device_status = GizwitsDeviceStatus(
+            latest_data["updated_at"], 
+            attributes=latest_data
+        )
         return GizwitsDeviceReport(device_info, device_status)
 
     async def fetch_devices(self) -> dict[str, GizwitsDeviceReport]:
@@ -305,7 +318,10 @@ class GizwitsClient(EventEmitter):
                 results[did] = GizwitsDeviceReport(device_info, None)
                 continue
 
-            device_status = GizwitsDeviceStatus(latest_data["updated_at"], attributes=latest_data)
+            device_status = GizwitsDeviceStatus(
+                latest_data["updated_at"], 
+                attributes=latest_data
+            )
             results[did] = GizwitsDeviceReport(device_info, device_status)
         return results
 
@@ -343,6 +359,9 @@ class GizwitsClient(EventEmitter):
         """
         did = device_update["did"]
         device_info = self.bindings.get(did)
-        device_status = GizwitsDeviceStatus(int(time()), attributes=device_update["attrs"])
+        device_status = GizwitsDeviceStatus(
+            int(time()), 
+            attributes=device_update["attrs"]
+        )
         result = GizwitsDeviceReport(device_info, device_status)
         self.emit('device_status_update', result)

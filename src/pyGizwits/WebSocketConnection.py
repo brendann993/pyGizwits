@@ -20,7 +20,8 @@ class WebSocketConnection:
         self.client: GizwitsClient = GizwitsClient
         self.session = session
         self.url = (
-            websocket_info['pre'] + websocket_info['host'] + ':' + websocket_info['port'] + websocket_info['path']
+            websocket_info['pre'] + websocket_info['host'] + ':' +
+            websocket_info['port'] + websocket_info['path']
         )
         self.connection: ClientWebSocketResponse
         self.logged_in: bool = False
@@ -47,21 +48,23 @@ class WebSocketConnection:
         Asynchronously connects to the WebSocket server.
 
         Returns:
-            `ClientWebSocketResponse`: a `ClientWebSocketResponse` object representing the connection.
+            `ClientWebSocketResponse`: a object representing the connection.
         """
         connection = await self.session.ws_connect(f"{self.url}")
         self.connection = connection
         # Create a background task to receive messages
-        self.receive_messages_task = asyncio.ensure_future(self.receive_messages(connection))
+        self.receive_messages_task = asyncio.ensure_future(
+            self.receive_messages(connection)
+        )
         return connection
 
     async def login(self):
         """
         Logs into the Websocket server.
 
-        This asynchronous function logs in the user by sending a JSON payload to the server.
-        The payload includes the user's app ID, UID, token, p0_type, heartbeat interval, and
-        auto_subscribe. The function returns nothing.
+        This asynchronous function logs in by sending a JSON payload to the server.
+        The payload includes the user's app ID, UID, token, p0_type, 
+        heartbeat interval, and auto_subscribe. The function returns nothing.
 
         Returns:
             None
@@ -101,7 +104,7 @@ class WebSocketConnection:
 
     async def subscribe(self, device_ids: list[str]):
         """
-        Asynchronously subscribes to a list of device IDs and sends a 'subscribe_req' command to the server.
+        Subscribes to a list of device IDs.
 
         Args:
             device_ids  (list[str]): A list of device IDs to subscribe to.
@@ -109,9 +112,9 @@ class WebSocketConnection:
             None
         """
         payload = {
-            "cmd": "subscribe_req", 
+            "cmd": "subscribe_req",
             "data": [
-                {"did": did} for did in device_ids 
+                {"did": did} for did in device_ids
             ]
         }
         await self.send(payload)
@@ -122,7 +125,8 @@ class WebSocketConnection:
         Asynchronously receives messages from a web socket connection.
 
         Args:
-            ws (ClientWebSocketResponse): The web socket connection to receive messages from.
+            ws (ClientWebSocketResponse): The web socket connection to receive
+            messages from.
         Returns:
             None
         """
@@ -160,7 +164,7 @@ class WebSocketConnection:
                 elif cmd == "subscribe_res":
                     await self.handle_device_subscribe_response(data)
                 elif cmd == "s2c_noti":
-                    await self.handle_s2c_notification (data)
+                    await self.handle_s2c_notification(data)
                 else:
                     logger.debug(f"Received unknown command: {cmd}")
             elif cmd == "pong":
