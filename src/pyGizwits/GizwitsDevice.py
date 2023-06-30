@@ -23,7 +23,7 @@ class GizwitsDevice:
     wifi_soft_version: str
     is_online: bool
     _socketType: str = "ssl_socket"
-    
+
     def get_websocketConnInfo(self) -> tuple[dict[str, str], str]:
         ws_info: Dict[str, str] = {'host': self.host, 'path': '/ws/app/v1'}
         if self._socketType == "ssl_socket":
