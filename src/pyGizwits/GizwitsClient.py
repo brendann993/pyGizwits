@@ -54,10 +54,9 @@ class GizwitsClient(EventEmitter):
     def get_base_url(region: Region) -> str:
         if region == GizwitsClient.Region.US:
             return "https://usapi.gizwits.com"
-        elif region == GizwitsClient.Region.EU:
+        if region == GizwitsClient.Region.EU:
             return "https://euapi.gizwits.com"
-        else:
-            return "https://api.gizwits.com"
+        return "https://api.gizwits.com"
 
     def token_expired(self):
         """
