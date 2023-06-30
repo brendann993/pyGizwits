@@ -35,8 +35,10 @@ class GizwitsUserToken:
 
 class GizwitsClient(EventEmitter):
     """Gizwits client representing a connection to the Gizwits server."""
+    
     class Region(Enum):
         """Gizwits region."""
+        
         US = "us"
         EU = "eu"
         DEFAULT = "default"

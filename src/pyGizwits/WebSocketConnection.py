@@ -17,6 +17,7 @@ from pyGizwits.pyGizwits import ErrorCodes, logger
 
 class WebSocketConnection:
     """WebSocket connection to the Gizwits server."""
+    
     def __init__(self, session: ClientSession, GizwitsClient, websocket_info):
         self.client: GizwitsClient = GizwitsClient
         self.session = session
