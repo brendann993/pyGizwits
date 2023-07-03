@@ -1,18 +1,10 @@
 import asyncio
 import json
-from typing import Dict
+from typing import Dict, Any, cast
 
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 
-from pyGizwits.Exceptions import (
-    GizwitsAuthException,
-    GizwitsException,
-    GizwitsIncorrectPasswordException,
-    GizwitsOfflineException,
-    GizwitsTokenInvalidException,
-    GizwitsUserDoesNotExistException,
-)
-from pyGizwits.pyGizwits import ErrorCodes, logger
+from pyGizwits.pyGizwits import logger
 
 
 class WebSocketConnection:
@@ -29,8 +21,8 @@ class WebSocketConnection:
         self.logged_in: bool = False
         self.subscribed_devices: list[str] = []
         self.ping_interval = 180
-        self.ping_task: asyncio.Task = None
-        self.receive_messages_task: asyncio.Task = None
+        self.ping_task: asyncio.Task
+        self.receive_messages_task: asyncio.Task
 
     async def add_device_sub(self, did: str):
         """
@@ -72,7 +64,7 @@ class WebSocketConnection:
         """
         connection = self.connection
         if connection is not None:
-            payload = {
+            payload: Dict[str, Any]  = {
                 "cmd": "login_req",
                 "data": {
                     "appid": self.client.app_id,
@@ -202,7 +194,7 @@ class WebSocketConnection:
         Returns:
             None
         """
-        success_list = data.get("success")
+        success_list: list[Any] = cast(list[Any], data.get("success"))
         for success_obj in success_list:
             did = success_obj['did']
             if did not in self.subscribed_devices:
@@ -236,7 +228,7 @@ class WebSocketConnection:
         else:
             logger.warn("Connection already closed.")
 
-    async def send(self, message: json) -> None:
+    async def send(self, message: Dict[str, Any]) -> None:
         """
         Asynchronously sends a JSON message over the connection.
 

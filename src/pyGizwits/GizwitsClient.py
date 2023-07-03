@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from time import time
-from typing import Any, Dict
+from typing import Any, Dict, cast
 from urllib.parse import urljoin
 
 from aiohttp import ClientError, ClientSession
@@ -10,17 +10,15 @@ from pyee.base import EventEmitter
 
 from .GizwitsDevice import GizwitsDevice, GizwitsDeviceReport, GizwitsDeviceStatus
 from .pyGizwits import (
-    ErrorCodes,
-    GizwitsAuthException,
-    GizwitsDeviceNotBound,
-    GizwitsException,
-    GizwitsIncorrectPasswordException,
-    GizwitsOfflineException,
-    GizwitsTokenInvalidException,
-    GizwitsUserDoesNotExistException,
     logger,
     raise_for_status,
 )
+
+from pyGizwits.Exceptions import (
+    GizwitsException,
+    GizwitsDeviceNotBound
+)
+
 from .WebSocketConnection import WebSocketConnection
 
 
@@ -362,7 +360,7 @@ class GizwitsClient(EventEmitter):
             None
         """
         did = device_update["did"]
-        device_info = self.bindings.get(did)
+        device_info = cast(GizwitsDevice, self.bindings.get(did))
         device_status = GizwitsDeviceStatus(
             int(time()), attributes=device_update["attrs"])
         result = GizwitsDeviceReport(device_info, device_status)

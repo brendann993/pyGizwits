@@ -4,7 +4,6 @@ import logging
 from aiohttp import ClientResponse
 
 from pyGizwits.Exceptions import (
-    GizwitsAuthException,
     GizwitsException,
     GizwitsIncorrectPasswordException,
     GizwitsOfflineException,

@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from time import time
 from typing import Any, Dict
 
-from pyGizwits.pyGizwits import logger
-
 _CONNECTIVITY_TIMEOUT = 1000
 
 
