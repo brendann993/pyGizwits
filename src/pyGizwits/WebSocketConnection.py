@@ -98,8 +98,8 @@ class WebSocketConnection:
         Send a ping periodically.
 
         Asynchronous function that sends a ping message at regular intervals.
-        It uses the `_send_ping()` method to send the ping message
-        and the `asyncio.sleep()` function to introduce a delay between each ping message.
+        It uses the `_send_ping()` method to send the ping message and the 
+        `asyncio.sleep()` function to introduce a delay between each ping message.
 
         Returns:
             None

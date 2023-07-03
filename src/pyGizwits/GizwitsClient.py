@@ -108,8 +108,8 @@ class GizwitsClient(EventEmitter):
         Sends a POST request to the login endpoint with the given username and password.
         The X-Gizwits-Application-Id header is set to the app_id stored in the class.
         The payload contains the given username, password, and language code.
-        If the request is successful, the response json is extracted to set the token and
-        uid class variables. Finally, the uid and token are returned as a tuple.
+        If the request is successful, the response json is extracted to set the token 
+        and uid class variables. Finally, the uid and token are returned as a tuple.
 
         Args:
             username (str): The username for the login request.
@@ -201,7 +201,8 @@ class GizwitsClient(EventEmitter):
 
         Returns:
             Dict[str, GizwitsDevice]: A dictionary containing the bound devices,
-            with each device's 'did' as the key and a GizwitsDevice instance as the value.
+            with each device's 'did' as the key and a GizwitsDevice instance as 
+            the value.
 
         Raises:
             GizwitsException: if an error occurs while retrieving the device bindings.
