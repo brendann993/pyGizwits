@@ -240,12 +240,12 @@ class GizwitsClient(EventEmitter):
                 else:
                     more = False
             except ClientError as e:
-                logger.error(f"Request error: {e}")
+                logger.error("Request error: %s", e)
                 raise GizwitsException(
                     "Error occurred while retrieving device bindings."
                 ) from e
             except Exception as e:
-                logger.error(f"Error: {e}")
+                logger.error("Error: %s", e)
                 raise GizwitsException(
                     "Unknown error occurred while retrieving device bindings."
                 ) from e
@@ -277,7 +277,7 @@ class GizwitsClient(EventEmitter):
         if device_id not in self.bindings.items():
             raise GizwitsDeviceNotBound()
         device_info = self.bindings[device_id]
-        logger.debug(f"Fetching device {device_id}")
+        logger.debug("Fetching device %s", device_id)
         latest_data = await self._get(f"/app/devdata/{device_id}/latest")
         # Get the age of the data according to the API
         api_update_timestamp = latest_data["updated_at"]
@@ -313,7 +313,7 @@ class GizwitsClient(EventEmitter):
             return results
 
         for did, device_info in self.bindings.items():
-            logger.debug(f"Fetching device {did}")
+            logger.debug("Fetching device %s", did)
             latest_data = await self._get(f"/app/devdata/{did}/latest")
             # Get the age of the data according to the API
             api_update_timestamp = latest_data["updated_at"]
@@ -343,10 +343,10 @@ class GizwitsClient(EventEmitter):
         sockets = self.sockets
         websocket_info, websocket_url = device.get_websocketConnInfo()
         if websocket_url in sockets:
-            logger.debug(f"Using existing websocket for {websocket_url}")
+            logger.debug("Using existing websocket for %s", websocket_url)
             await sockets[websocket_url].add_device_sub(device.device_id)
         else:
-            logger.debug(f"Creating websocket for {websocket_url}")
+            logger.debug("Creating websocket for %s", websocket_url)
             socket = WebSocketConnection(self._session, self, websocket_info)
             await socket.connect()
             await socket.login()
