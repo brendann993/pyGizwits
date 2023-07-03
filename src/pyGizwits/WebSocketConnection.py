@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Dict, Any, cast
+from typing import Any, Dict, cast
 
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 
@@ -14,8 +14,11 @@ class WebSocketConnection:
         self.client: GizwitsClient = GizwitsClient
         self.session = session
         self.url = (
-            websocket_info['pre'] + websocket_info['host'] +
-            ':' + websocket_info['port'] + websocket_info['path']
+            websocket_info['pre']
+            + websocket_info['host']
+            + ':'
+            + websocket_info['port']
+            + websocket_info['path']
         )
         self.connection: ClientWebSocketResponse
         self.logged_in: bool = False
@@ -48,7 +51,8 @@ class WebSocketConnection:
         self.connection = connection
         # Create a background task to receive messages
         self.receive_messages_task = asyncio.ensure_future(
-            self.receive_messages(connection))
+            self.receive_messages(connection)
+        )
         return connection
 
     async def login(self):
@@ -64,7 +68,7 @@ class WebSocketConnection:
         """
         connection = self.connection
         if connection is not None:
-            payload: Dict[str, Any]  = {
+            payload: Dict[str, Any] = {
                 "cmd": "login_req",
                 "data": {
                     "appid": self.client.app_id,
