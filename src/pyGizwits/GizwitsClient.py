@@ -43,11 +43,7 @@ class GizwitsClient(EventEmitter):
         EU = "eu"
         DEFAULT = "default"
 
-    def __init__(
-        self, session: ClientSession,
-        app_id: str,
-        region: Region = Region.DEFAULT
-    ):
+    def __init__(self, session: ClientSession, app_id: str, region: Region = Region.DEFAULT):
         super().__init__()
         self.base_url = self.get_base_url(region)
         self.region = region
@@ -136,7 +132,8 @@ class GizwitsClient(EventEmitter):
         self.expires_at = login_data.expiry
         # Schedule the token refresh
         expiry_time = self.expires_at - time()  # Calculate time remaining until expiry
-        asyncio.create_task(self.refresh_token(expiry_time, username, password))
+        asyncio.create_task(self.refresh_token(
+            expiry_time, username, password))
 
     async def refresh_token(self, expiry_time, username, password):
         """
@@ -147,7 +144,7 @@ class GizwitsClient(EventEmitter):
         the login method with the provided username and password.
 
         Args:
-            expiry_time (int): An integer representing the duration 
+            expiry_time (int): An integer representing the duration
             in seconds until the token expires.
             username (str): A string representing the username.
             password (str): A string representing the password.
@@ -171,10 +168,8 @@ class GizwitsClient(EventEmitter):
             Dict[str, Any]: A dictionary containing the response data.
         """
         url = urljoin(self.base_url, endpoint)
-        headers = {
-            "X-Gizwits-Application-Id": self.app_id,
-            "X-Gizwits-User-Token": self.token
-        }
+        headers = {"X-Gizwits-Application-Id": self.app_id,
+                   "X-Gizwits-User-Token": self.token}
 
         async with self._session.get(url, headers=headers) as response:
             await raise_for_status(response)
@@ -190,14 +185,12 @@ class GizwitsClient(EventEmitter):
             data (Dict[str, Any]): The data to send with the request.
 
         Returns:
-            Dict[str, Any]: A dictionary representing the JSON data 
+            Dict[str, Any]: A dictionary representing the JSON data
             returned by the response.
         """
         url = urljoin(self.base_url, endpoint)
-        headers = {
-            "X-Gizwits-Application-Id": self.app_id,
-            "X-Gizwits-User-Token": self.token
-        }
+        headers = {"X-Gizwits-Application-Id": self.app_id,
+                   "X-Gizwits-User-Token": self.token}
         headers = {k: v if v is not None else "" for k, v in headers.items()}
         async with self._session.post(url, headers=headers, json=data) as response:
             await raise_for_status(response)
@@ -210,7 +203,7 @@ class GizwitsClient(EventEmitter):
         Using the '/app/bindings' endpoint
 
         Returns:
-            Dict[str, GizwitsDevice]: A dictionary containing the bound devices, 
+            Dict[str, GizwitsDevice]: A dictionary containing the bound devices,
             with each device's 'did' as the key and a GizwitsDevice instance as the value.
 
         Raises:
@@ -252,18 +245,16 @@ class GizwitsClient(EventEmitter):
             except ClientError as e:
                 logger.error(f"Request error: {e}")
                 raise GizwitsException(
-                    "Error occurred while retrieving device bindings."
-                ) from e
+                    "Error occurred while retrieving device bindings.") from e
             except Exception as e:
                 logger.error(f"Error: {e}")
                 raise GizwitsException(
-                    "Unknown error occurred while retrieving device bindings."
-                ) from e
+                    "Unknown error occurred while retrieving device bindings.") from e
         return bound_devices
 
     async def refresh_bindings(self) -> None:
         """
-        Asynchronously refreshes the bindings of the current session 
+        Asynchronously refreshes the bindings of the current session
 
         Emits a 'bindings_refreshed' event with the updated bindings.
 
@@ -299,9 +290,7 @@ class GizwitsClient(EventEmitter):
             return GizwitsDeviceReport(device_info, None)
 
         device_status = GizwitsDeviceStatus(
-            latest_data["updated_at"],
-            attributes=latest_data
-        )
+            latest_data["updated_at"], attributes=latest_data)
         return GizwitsDeviceReport(device_info, device_status)
 
     async def fetch_devices(self) -> dict[str, GizwitsDeviceReport]:
@@ -337,9 +326,7 @@ class GizwitsClient(EventEmitter):
                 continue
 
             device_status = GizwitsDeviceStatus(
-                latest_data["updated_at"],
-                attributes=latest_data
-            )
+                latest_data["updated_at"], attributes=latest_data)
             results[did] = GizwitsDeviceReport(device_info, device_status)
         return results
 
@@ -377,8 +364,6 @@ class GizwitsClient(EventEmitter):
         did = device_update["did"]
         device_info = self.bindings.get(did)
         device_status = GizwitsDeviceStatus(
-            int(time()),
-            attributes=device_update["attrs"]
-        )
+            int(time()), attributes=device_update["attrs"])
         result = GizwitsDeviceReport(device_info, device_status)
         self.emit('device_status_update', result)

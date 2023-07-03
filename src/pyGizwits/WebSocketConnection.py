@@ -22,8 +22,8 @@ class WebSocketConnection:
         self.client: GizwitsClient = GizwitsClient
         self.session = session
         self.url = (
-            websocket_info['pre'] + websocket_info['host'] + ':' +
-            websocket_info['port'] + websocket_info['path']
+            websocket_info['pre'] + websocket_info['host'] +
+            ':' + websocket_info['port'] + websocket_info['path']
         )
         self.connection: ClientWebSocketResponse
         self.logged_in: bool = False
@@ -56,8 +56,7 @@ class WebSocketConnection:
         self.connection = connection
         # Create a background task to receive messages
         self.receive_messages_task = asyncio.ensure_future(
-            self.receive_messages(connection)
-        )
+            self.receive_messages(connection))
         return connection
 
     async def login(self):
@@ -85,7 +84,8 @@ class WebSocketConnection:
                 },
             }
             await self.send(payload)
-            self.ping_task = asyncio.create_task(self._send_ping_periodically())
+            self.ping_task = asyncio.create_task(
+                self._send_ping_periodically())
 
     async def _send_ping(self) -> None:
         """
@@ -94,9 +94,7 @@ class WebSocketConnection:
         Returns:
             None
         """
-        payload = {
-            "cmd": "ping"
-        }
+        payload = {"cmd": "ping"}
         await self.send(payload)
 
     async def _send_ping_periodically(self):
@@ -123,12 +121,8 @@ class WebSocketConnection:
         Returns:
             None
         """
-        payload = {
-            "cmd": "subscribe_req",
-            "data": [
-                {"did": did} for did in device_ids
-            ]
-        }
+        payload = {"cmd": "subscribe_req", "data": [
+            {"did": did} for did in device_ids]}
         await self.send(payload)
 
     async def receive_messages(self, ws: ClientWebSocketResponse):
