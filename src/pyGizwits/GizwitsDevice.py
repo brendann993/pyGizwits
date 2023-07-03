@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from time import time
 from typing import Any, Dict
 
-from pyGizwits.pyGizwits import logger
-
 _CONNECTIVITY_TIMEOUT = 1000
 
 
@@ -39,7 +37,10 @@ class GizwitsDevice:
         else:
             ws_info['pre'] = "ws://"
             ws_info['port'] = str(self.ws_port)
-        return (ws_info, f"{ws_info['pre'] + ws_info['host'] + ':' + ws_info['port'] + ws_info['path']}")
+        return (
+            ws_info,
+            f"{ws_info['pre']}{ws_info['host']}:{ws_info['port']}{ws_info['path']}",
+        )
 
 
 @dataclass

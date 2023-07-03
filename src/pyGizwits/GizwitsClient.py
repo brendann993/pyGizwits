@@ -2,25 +2,16 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from time import time
-from typing import Any, Dict
+from typing import Any, Dict, cast
 from urllib.parse import urljoin
 
 from aiohttp import ClientError, ClientSession
 from pyee.base import EventEmitter
 
+from pyGizwits.Exceptions import GizwitsDeviceNotBound, GizwitsException
+
 from .GizwitsDevice import GizwitsDevice, GizwitsDeviceReport, GizwitsDeviceStatus
-from .pyGizwits import (
-    ErrorCodes,
-    GizwitsAuthException,
-    GizwitsDeviceNotBound,
-    GizwitsException,
-    GizwitsIncorrectPasswordException,
-    GizwitsOfflineException,
-    GizwitsTokenInvalidException,
-    GizwitsUserDoesNotExistException,
-    logger,
-    raise_for_status,
-)
+from .pyGizwits import logger, raise_for_status
 from .WebSocketConnection import WebSocketConnection
 
 
@@ -43,7 +34,9 @@ class GizwitsClient(EventEmitter):
         EU = "eu"
         DEFAULT = "default"
 
-    def __init__(self, session: ClientSession, app_id: str, region: Region = Region.DEFAULT):
+    def __init__(
+        self, session: ClientSession, app_id: str, region: Region = Region.DEFAULT
+    ):
         super().__init__()
         self.base_url = self.get_base_url(region)
         self.region = region
@@ -115,8 +108,8 @@ class GizwitsClient(EventEmitter):
         Sends a POST request to the login endpoint with the given username and password.
         The X-Gizwits-Application-Id header is set to the app_id stored in the class.
         The payload contains the given username, password, and language code.
-        If the request is successful, the response json is extracted to set the token and
-        uid class variables. Finally, the uid and token are returned as a tuple.
+        If the request is successful, the response json is extracted to set the token
+        and uid class variables. Finally, the uid and token are returned as a tuple.
 
         Args:
             username (str): The username for the login request.
@@ -168,8 +161,10 @@ class GizwitsClient(EventEmitter):
             Dict[str, Any]: A dictionary containing the response data.
         """
         url = urljoin(self.base_url, endpoint)
-        headers = {"X-Gizwits-Application-Id": self.app_id,
-                   "X-Gizwits-User-Token": self.token}
+        headers = {
+            "X-Gizwits-Application-Id": self.app_id,
+            "X-Gizwits-User-Token": self.token,
+        }
 
         async with self._session.get(url, headers=headers) as response:
             await raise_for_status(response)
@@ -189,8 +184,10 @@ class GizwitsClient(EventEmitter):
             returned by the response.
         """
         url = urljoin(self.base_url, endpoint)
-        headers = {"X-Gizwits-Application-Id": self.app_id,
-                   "X-Gizwits-User-Token": self.token}
+        headers = {
+            "X-Gizwits-Application-Id": self.app_id,
+            "X-Gizwits-User-Token": self.token,
+        }
         headers = {k: v if v is not None else "" for k, v in headers.items()}
         async with self._session.post(url, headers=headers, json=data) as response:
             await raise_for_status(response)
@@ -204,7 +201,8 @@ class GizwitsClient(EventEmitter):
 
         Returns:
             Dict[str, GizwitsDevice]: A dictionary containing the bound devices,
-            with each device's 'did' as the key and a GizwitsDevice instance as the value.
+            with each device's 'did' as the key and a GizwitsDevice instance as
+            the value.
 
         Raises:
             GizwitsException: if an error occurs while retrieving the device bindings.
@@ -243,13 +241,15 @@ class GizwitsClient(EventEmitter):
                 else:
                     more = False
             except ClientError as e:
-                logger.error(f"Request error: {e}")
+                logger.error("Request error: %s", e)
                 raise GizwitsException(
-                    "Error occurred while retrieving device bindings.") from e
+                    "Error occurred while retrieving device bindings."
+                ) from e
             except Exception as e:
-                logger.error(f"Error: {e}")
+                logger.error("Error: %s", e)
                 raise GizwitsException(
-                    "Unknown error occurred while retrieving device bindings.") from e
+                    "Unknown error occurred while retrieving device bindings."
+                ) from e
         return bound_devices
 
     async def refresh_bindings(self) -> None:
@@ -278,7 +278,7 @@ class GizwitsClient(EventEmitter):
         if device_id not in self.bindings.items():
             raise GizwitsDeviceNotBound()
         device_info = self.bindings[device_id]
-        logger.debug(f"Fetching device {device_id}")
+        logger.debug("Fetching device %s", device_id)
         latest_data = await self._get(f"/app/devdata/{device_id}/latest")
         # Get the age of the data according to the API
         api_update_timestamp = latest_data["updated_at"]
@@ -290,7 +290,8 @@ class GizwitsClient(EventEmitter):
             return GizwitsDeviceReport(device_info, None)
 
         device_status = GizwitsDeviceStatus(
-            latest_data["updated_at"], attributes=latest_data)
+            latest_data["updated_at"], attributes=latest_data
+        )
         return GizwitsDeviceReport(device_info, device_status)
 
     async def fetch_devices(self) -> dict[str, GizwitsDeviceReport]:
@@ -313,7 +314,7 @@ class GizwitsClient(EventEmitter):
             return results
 
         for did, device_info in self.bindings.items():
-            logger.debug(f"Fetching device {did}")
+            logger.debug("Fetching device %s", did)
             latest_data = await self._get(f"/app/devdata/{did}/latest")
             # Get the age of the data according to the API
             api_update_timestamp = latest_data["updated_at"]
@@ -326,7 +327,8 @@ class GizwitsClient(EventEmitter):
                 continue
 
             device_status = GizwitsDeviceStatus(
-                latest_data["updated_at"], attributes=latest_data)
+                latest_data["updated_at"], attributes=latest_data
+            )
             results[did] = GizwitsDeviceReport(device_info, device_status)
         return results
 
@@ -342,10 +344,10 @@ class GizwitsClient(EventEmitter):
         sockets = self.sockets
         websocket_info, websocket_url = device.get_websocketConnInfo()
         if websocket_url in sockets:
-            logger.debug(f"Using existing websocket for {websocket_url}")
+            logger.debug("Using existing websocket for %s", websocket_url)
             await sockets[websocket_url].add_device_sub(device.device_id)
         else:
-            logger.debug(f"Creating websocket for {websocket_url}")
+            logger.debug("Creating websocket for %s", websocket_url)
             socket = WebSocketConnection(self._session, self, websocket_info)
             await socket.connect()
             await socket.login()
@@ -362,8 +364,9 @@ class GizwitsClient(EventEmitter):
             None
         """
         did = device_update["did"]
-        device_info = self.bindings.get(did)
+        device_info = cast(GizwitsDevice, self.bindings.get(did))
         device_status = GizwitsDeviceStatus(
-            int(time()), attributes=device_update["attrs"])
+            int(time()), attributes=device_update["attrs"]
+        )
         result = GizwitsDeviceReport(device_info, device_status)
         self.emit('device_status_update', result)
