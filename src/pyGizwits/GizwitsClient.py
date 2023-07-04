@@ -35,8 +35,10 @@ class GizwitsClient(EventEmitter):
         DEFAULT = "default"
 
     def __init__(
-        self, session: ClientSession, app_id: str, region: Region = Region.DEFAULT
-    ):
+            self,
+            session: ClientSession,
+            app_id: str,
+            region: Region = Region.DEFAULT):
         super().__init__()
         self.base_url = self.get_base_url(region)
         self.region = region
@@ -125,7 +127,11 @@ class GizwitsClient(EventEmitter):
         self.expires_at = login_data.expiry
         # Schedule the token refresh
         expiry_time = self.expires_at - time()  # Calculate time remaining until expiry
-        asyncio.create_task(self.refresh_token(expiry_time, username, password))
+        asyncio.create_task(
+            self.refresh_token(
+                expiry_time,
+                username,
+                password))
 
     async def refresh_token(self, expiry_time, username, password):
         """
