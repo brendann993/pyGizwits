@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from time import time
-from typing import Any, Dict, cast
+from typing import Any, Coroutine, Dict, cast
 from urllib.parse import urljoin
 
 from aiohttp import ClientError, ClientSession
@@ -167,6 +167,7 @@ class GizwitsClient(EventEmitter):
 
         async with self._session.get(url, headers=headers) as response:
             await raise_for_status(response)
+            # Needed as the api does not always set the correct content type
             response_json: Dict[str, Any] = await response.json(content_type=None)
             return response_json
 
@@ -190,7 +191,9 @@ class GizwitsClient(EventEmitter):
         headers = {k: v if v is not None else "" for k, v in headers.items()}
         async with self._session.post(url, headers=headers, json=data) as response:
             await raise_for_status(response)
-            return await response.json()
+            # Needed as the api does not always set the correct content type
+            response_json: Dict[str, Any] = await response.json(content_type=None)
+            return response_json
 
     async def _get_bindings(self) -> Dict[str, GizwitsDevice]:
         """
@@ -274,7 +277,7 @@ class GizwitsClient(EventEmitter):
         Raises:
             GizwitsDeviceNotBound: if the device is not bound.
         """
-        if device_id not in self.bindings.items():
+        if device_id not in self.bindings:
             raise GizwitsDeviceNotBound()
         device_info = self.bindings[device_id]
         logger.debug("Fetching device %s", device_id)
@@ -332,6 +335,46 @@ class GizwitsClient(EventEmitter):
             )
             results[did] = GizwitsDeviceReport(device_info, device_status)
         return results
+
+    async def set_device_attribute(
+        self, device_id: str, attribute: str, value: Any
+    ) -> None:
+        """
+        Asynchronously sets the value of a device attribute.
+
+        Args:
+            device_id (str): The ID of the device.
+            attribute (str): The name of the attribute.
+            value (Any): The value to set.
+        Returns:
+            Coroutine
+        """
+        await self.set_device_attributes(device_id, {attribute: value})
+        return
+
+    async def set_device_attributes(
+        self, device_id: str, attributes: dict[str, Any]
+    ) -> None:
+        """
+        Asynchronously sets the value of multiple device attributes.
+
+        Args:
+            device_id (str): The ID of the device.
+            attributes (dict[str, Any]): The attributes to set.
+        Returns:
+            None
+        """
+        if device_id not in self.bindings:
+            raise GizwitsDeviceNotBound()
+        payload: Dict[str, Any] = {"attrs": dict(attributes)}
+        try:
+            await self._post(f"/app/control/{device_id}", payload)
+        except Exception as e:
+            logger.error("Error: %s", e)
+            raise GizwitsException(
+                "Unknown error occurred while setting device attributes."
+            ) from e
+        return
 
     async def Subscribe_to_device_updates(self, device: GizwitsDevice):
         """
