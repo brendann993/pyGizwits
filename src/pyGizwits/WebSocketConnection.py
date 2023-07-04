@@ -122,7 +122,8 @@ class WebSocketConnection:
         await self.send(payload)
 
     async def receive_messages(self, ws: ClientWebSocketResponse):
-        # sourcery skip: merge-comparisons, merge-duplicate-blocks, remove-redundant-if
+        # sourcery skip: merge-comparisons, merge-duplicate-blocks,
+        # remove-redundant-if
         """
         Asynchronously receives messages from a web socket connection.
 
