@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from time import time
-from typing import Any, Coroutine, Dict, cast
+from typing import Any, Dict, cast
 from urllib.parse import urljoin
 
 from aiohttp import ClientError, ClientSession
