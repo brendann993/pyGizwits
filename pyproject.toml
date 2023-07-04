@@ -63,16 +63,15 @@ detached = true
 dependencies = [
   "black>=23.1.0",
   "mypy>=1.0.0",
-  "autopep8>=2.0.2",
+  "isort>=5.10.0",
 ]
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/pyGizwits tests}"
 style = [
-  "autopep8  --diff --recursive {args:.}",
   "black --check --diff {args:.}",
 ]
 fmt = [
-  "autopep8 --recursive --in-place --aggressive --aggressive {args:.}",
+  "isort {args:.}",
   "black {args:.}",
   "style",
 ]
@@ -88,16 +87,6 @@ skip-string-normalization = true
 
 [tool.isort]
 profile = "black"
-
-[tool.autopep8]
-# List of glob patterns to include/exclude files
-exclude = "venv/*, env/*"
-
-# Maximum line length
-line_length = 88
-
-# Remove trailing whitespace
-aggressive = 2
 
 [tool.coverage.run]
 source_pkgs = ["pyGizwits", "tests"]
