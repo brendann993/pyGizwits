@@ -80,7 +80,8 @@ class WebSocketConnection:
                 },
             }
             await self.send(payload)
-            self.ping_task = asyncio.create_task(self._send_ping_periodically())
+            self.ping_task = asyncio.create_task(
+                self._send_ping_periodically())
 
     async def _send_ping(self) -> None:
         """
@@ -116,7 +117,8 @@ class WebSocketConnection:
         Returns:
             None
         """
-        payload = {"cmd": "subscribe_req", "data": [{"did": did} for did in device_ids]}
+        payload = {"cmd": "subscribe_req", "data": [
+            {"did": did} for did in device_ids]}
         await self.send(payload)
 
     async def receive_messages(self, ws: ClientWebSocketResponse):
