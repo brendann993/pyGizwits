@@ -63,17 +63,17 @@ detached = true
 dependencies = [
   "black>=23.1.0",
   "mypy>=1.0.0",
-  "ruff>=0.0.243",
+  "autopep8>=2.0.2",
 ]
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/pyGizwits tests}"
 style = [
-  "ruff {args:.}",
+  "autopep8  --diff --recursive {args:.}",
   "black --check --diff {args:.}",
 ]
 fmt = [
+  "autopep8 --recursive --in-place --aggressive --aggressive {args:.}",
   "black {args:.}",
-  "ruff --fix {args:.}",
   "style",
 ]
 all = [
@@ -89,60 +89,15 @@ skip-string-normalization = true
 [tool.isort]
 profile = "black"
 
-[tool.ruff]
-target-version = "py37"
-line-length = 88
-select = [
-  "A",
-  "ARG",
-  "B",
-  "C",
-  "DTZ",
-  "E",
-  "EM",
-  "F",
-  "FBT",
-  "I",
-  "ICN",
-  "ISC",
-  "N",
-  "PLC",
-  "PLE",
-  "PLR",
-  "PLW",
-  "Q",
-  "RUF",
-  "S",
-  "T",
-  "TID",
-  "UP",
-  "W",
-  "YTT",
-]
-ignore = [
-  # Allow non-abstract empty methods in abstract base classes
-  "B027",
-  # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
-  # Ignore checks for possible passwords
-  "S105", "S106", "S107",
-  # Ignore complexity
-  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
-]
-unfixable = [
-  # Don't touch unused imports
-  "F401",
-]
+[tool.autopep8]
+# List of glob patterns to include/exclude files
+exclude = "venv/*, env/*"
 
-[tool.ruff.isort]
-known-first-party = ["pyGizwits"]
+# Maximum line length
+line_length = 88
 
-[tool.ruff.flake8-tidy-imports]
-ban-relative-imports = "all"
-
-[tool.ruff.per-file-ignores]
-# Tests can use magic values, assertions, and relative imports
-"tests/**/*" = ["PLR2004", "S101", "TID252"]
+# Remove trailing whitespace
+aggressive = 2
 
 [tool.coverage.run]
 source_pkgs = ["pyGizwits", "tests"]

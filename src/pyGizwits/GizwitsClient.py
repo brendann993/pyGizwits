@@ -125,8 +125,7 @@ class GizwitsClient(EventEmitter):
         self.expires_at = login_data.expiry
         # Schedule the token refresh
         expiry_time = self.expires_at - time()  # Calculate time remaining until expiry
-        asyncio.create_task(self.refresh_token(
-            expiry_time, username, password))
+        asyncio.create_task(self.refresh_token(expiry_time, username, password))
 
     async def refresh_token(self, expiry_time, username, password):
         """
@@ -320,9 +319,11 @@ class GizwitsClient(EventEmitter):
             api_update_timestamp = latest_data["updated_at"]
 
             # Zero indicates the device is offline
-            # This has been observed after a device was offline for a few months
+            # This has been observed after a device was offline for a few
+            # months
             if api_update_timestamp == 0:
-                # In testing, the 'attrs' dictionary has been observed to be empty
+                # In testing, the 'attrs' dictionary has been observed to be
+                # empty
                 results[did] = GizwitsDeviceReport(device_info, None)
                 continue
 
