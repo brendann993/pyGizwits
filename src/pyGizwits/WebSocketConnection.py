@@ -1,17 +1,23 @@
 import asyncio
 import json
-from typing import Any, Dict, cast
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 from aiohttp import ClientSession, ClientWebSocketResponse, WSMsgType
 
-from pyGizwits.pyGizwits import logger
+if TYPE_CHECKING:
+    from pyGizwits.DeviceManager import DeviceManager
+    from pyGizwits.GizwitsDevice import GizwitsDevice
+
+from pyGizwits.logger import logger
 
 
 class WebSocketConnection:
     """WebSocket connection to the Gizwits server."""
 
-    def __init__(self, session: ClientSession, GizwitsClient, websocket_info):
-        self.client: GizwitsClient = GizwitsClient
+    def __init__(
+        self, session: ClientSession, device_manager: 'DeviceManager', websocket_info
+    ):
+        self.device_manager: 'DeviceManager' = device_manager
         self.session = session
         self.url = (
             websocket_info['pre']
@@ -71,9 +77,9 @@ class WebSocketConnection:
             payload: Dict[str, Any] = {
                 "cmd": "login_req",
                 "data": {
-                    "appid": self.client.app_id,
-                    "uid": self.client.uid,
-                    "token": self.client.token,
+                    "appid": self.device_manager.client.app_id,
+                    "uid": self.device_manager.client.uid,
+                    "token": self.device_manager.client.token,
                     "p0_type": "attrs_v4",
                     "heartbeat_interval": self.ping_interval,
                     "auto_subscribe": False,
@@ -203,6 +209,10 @@ class WebSocketConnection:
             if did not in self.subscribed_devices:
                 # Add the unique 'did' to your list
                 self.subscribed_devices.append(did)
+            device: 'GizwitsDevice' = cast(
+                'GizwitsDevice', self.device_manager.devices.get(did)
+            )
+            device.websocket_connection = self
 
     async def handle_s2c_notification(self, data: Dict) -> None:
         """
@@ -213,7 +223,7 @@ class WebSocketConnection:
         Returns:
             None
         """
-        await self.client.got_device_status_update(data)
+        await self.device_manager.got_device_status_update(data)
 
     async def close(self):
         """

@@ -2,17 +2,22 @@ import asyncio
 from dataclasses import dataclass
 from enum import Enum
 from time import time
-from typing import Any, Dict, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 from aiohttp import ClientError, ClientSession
-from pyee.base import EventEmitter
 
-from pyGizwits.Exceptions import GizwitsDeviceNotBound, GizwitsException
+if TYPE_CHECKING:
+    from pyGizwits.DeviceManager import DeviceManager
 
-from .GizwitsDevice import GizwitsDevice, GizwitsDeviceReport, GizwitsDeviceStatus
-from .pyGizwits import logger, raise_for_status
-from .WebSocketConnection import WebSocketConnection
+from pyGizwits.Exceptions import (
+    GizwitsDeviceNotBound,
+    GizwitsException,
+    raise_for_status,
+)
+from pyGizwits.GizwitsDevice import GizwitsDevice
+from pyGizwits.logger import logger
+from pyGizwits.WebSocketConnection import WebSocketConnection
 
 
 @dataclass
@@ -24,7 +29,7 @@ class GizwitsUserToken:
     expiry: int
 
 
-class GizwitsClient(EventEmitter):
+class GizwitsClient:
     """Gizwits client representing a connection to the Gizwits server."""
 
     class Region(Enum):
@@ -35,18 +40,20 @@ class GizwitsClient(EventEmitter):
         DEFAULT = "default"
 
     def __init__(
-        self, session: ClientSession, app_id: str, region: Region = Region.DEFAULT
+        self,
+        session: ClientSession,
+        device_manager: 'DeviceManager',
+        app_id: str,
+        region: Region = Region.DEFAULT,
     ):
-        super().__init__()
         self.base_url = self.get_base_url(region)
         self.region = region
         self.app_id = app_id
         self.token: str
         self.uid: str
         self.expires_at: int
-        self.bindings: Dict[str, GizwitsDevice] = {}
-        self.sockets: Dict[str, WebSocketConnection] = {}
         self._session = session
+        self.device_manager = device_manager
 
     @staticmethod
     def get_base_url(region: Region) -> str:
@@ -70,7 +77,7 @@ class GizwitsClient(EventEmitter):
         Returns:
             None
         """
-        self.emit('token_expired')
+        self.device_manager.emit('token_expired')
 
     async def get_token(self, username: str, password: str) -> GizwitsUserToken:
         """
@@ -195,16 +202,19 @@ class GizwitsClient(EventEmitter):
             response_json: Dict[str, Any] = await response.json(content_type=None)
             return response_json
 
-    async def _get_bindings(self) -> Dict[str, GizwitsDevice]:
+    async def get_bindings(
+        self, device_manager: 'DeviceManager', device_types: Optional[List[str]] = None
+    ) -> Dict[str, GizwitsDevice]:
         """
         Asynchronously retrieves device bindings from Gizwits.
 
         Using the '/app/bindings' endpoint
 
+        Args:
+            device_manager (DeviceManager): The device manager.
+            device_types (Optional[List[str]]): A list of device types to retrieve
         Returns:
-            Dict[str, GizwitsDevice]: A dictionary containing the bound devices,
-            with each device's 'did' as the key and a GizwitsDevice instance as
-            the value.
+            A dictionary of GizwitsDevice objects, where the key is the device ID.
 
         Raises:
             GizwitsException: if an error occurs while retrieving the device bindings.
@@ -219,27 +229,27 @@ class GizwitsClient(EventEmitter):
             endpoint = url + query
             try:
                 response_data = await self._get(endpoint)
-                if 'devices' in response_data and response_data['devices']:
-                    for device in response_data['devices']:
-                        did = device["did"]
-                        bound_devices[did] = GizwitsDevice(
-                            device["did"],
-                            device["dev_alias"],
-                            device["product_name"],
-                            device['mac'],
-                            device['ws_port'],
-                            device['host'],
-                            device['wss_port'],
-                            device['protoc'],
-                            device["mcu_soft_version"],
-                            device["mcu_hard_version"],
-                            device["wifi_soft_version"],
-                            device["is_online"],
-                        )
-                    if len(response_data['devices']) == limit:
-                        skip += limit
-                    else:
-                        more = False
+                devices = response_data.get('devices', [])
+                for device in devices:
+                    did = device["did"]
+                    bound_devices[did] = GizwitsDevice(
+                        device["did"],
+                        device["dev_alias"],
+                        device["product_name"],
+                        device['mac'],
+                        device['ws_port'],
+                        device['host'],
+                        device['wss_port'],
+                        device['protoc'],
+                        device["mcu_soft_version"],
+                        device["mcu_hard_version"],
+                        device["wifi_soft_version"],
+                        device["is_online"],
+                        self,
+                        device_manager,
+                    )
+                if len(devices) == limit:
+                    skip += limit
                 else:
                     more = False
             except ClientError as e:
@@ -252,34 +262,42 @@ class GizwitsClient(EventEmitter):
                 raise GizwitsException(
                     "Unknown error occurred while retrieving device bindings."
                 ) from e
-        return bound_devices
+        if device_types is None:
+            device_manager.devices = bound_devices
+            return bound_devices
+        else:
+            filtered_devices = {
+                did: device
+                for did, device in bound_devices.items()
+                if device.product_name in device_types
+            }
+            device_manager.devices = filtered_devices
+            return filtered_devices
 
-    async def refresh_bindings(self) -> None:
+    async def refresh_bindings(self, device_manager: 'DeviceManager') -> None:
         """
         Asynchronously refreshes the bindings of the current session
-
-        Emits a 'bindings_refreshed' event with the updated bindings.
 
         Returns:
             None
         """
-        self.bindings = await self._get_bindings()
-        self.emit('bindings_refreshed', self.bindings)
+        self.bindings = await self.get_bindings(device_manager)
+        self.device_manager.emit('bindings_refreshed', self.bindings)
 
-    async def fetch_device(self, device_id: str) -> GizwitsDeviceReport:
+    async def fetch_device(self, device_id: str) -> GizwitsDevice:
         """
         Asynchronously fetches the latest data for a specific device.
 
         Args:
             device_id (str): The ID of the device to fetch.
         Returns:
-            GizwitsDeviceReport: The latest data for the device.
+            GizwitsDevice: The latest data for the device.
         Raises:
             GizwitsDeviceNotBound: if the device is not bound.
         """
-        if device_id not in self.bindings:
+        if device_id not in self.device_manager.devices:
             raise GizwitsDeviceNotBound()
-        device_info = self.bindings[device_id]
+        device_info = self.device_manager.devices[device_id]
         logger.debug("Fetching device %s", device_id)
         latest_data = await self._get(f"/app/devdata/{device_id}/latest")
         # Get the age of the data according to the API
@@ -289,14 +307,14 @@ class GizwitsClient(EventEmitter):
         # This has been observed after a device was offline for a few months
         if api_update_timestamp == 0:
             # In testing, the 'attrs' dictionary has been observed to be empty
-            return GizwitsDeviceReport(device_info, None)
+            device_info.is_online = False
+            device_info.attributes = {}
+            return device_info
 
-        device_status = GizwitsDeviceStatus(
-            latest_data["updated_at"], attributes=latest_data
-        )
-        return GizwitsDeviceReport(device_info, device_status)
+        device_info.attributes = latest_data
+        return device_info
 
-    async def fetch_devices(self) -> dict[str, GizwitsDeviceReport]:
+    async def fetch_devices(self) -> dict[str, GizwitsDevice]:
         """
         Asynchronously fetches the latest data for all currently bound devices.
 
@@ -304,18 +322,15 @@ class GizwitsClient(EventEmitter):
 
         Returns:
             A dictionary where each key is a device ID and each value is a
-            `GizwitsDeviceReport` object containing the latest data for that
-            device. If no data is available for a device (i.e. the device is
-            offline), its `GizwitsDeviceReport` object will have a `None`
-            `GizwitsDeviceStatus` object. If no devices are currently bound, an
-            empty dictionary is returned.
+            `GizwitsDevice` object containing the latest data for that
+            device.
         """
-        results: dict[str, GizwitsDeviceReport] = {}
+        results: dict[str, GizwitsDevice] = {}
 
-        if not self.bindings:
+        if not self.device_manager.devices:
             return results
 
-        for did, device_info in self.bindings.items():
+        for did, device_info in self.device_manager.devices.items():
             logger.debug("Fetching device %s", did)
             latest_data = await self._get(f"/app/devdata/{did}/latest")
             # Get the age of the data according to the API
@@ -327,13 +342,12 @@ class GizwitsClient(EventEmitter):
             if api_update_timestamp == 0:
                 # In testing, the 'attrs' dictionary has been observed to be
                 # empty
-                results[did] = GizwitsDeviceReport(device_info, None)
+                device_info.is_online = False
+                device_info.attributes = {}
                 continue
 
-            device_status = GizwitsDeviceStatus(
-                latest_data["updated_at"], attributes=latest_data
-            )
-            results[did] = GizwitsDeviceReport(device_info, device_status)
+            device_info.attributes = latest_data
+            results[did] = device_info
         return results
 
     async def set_device_attribute(
@@ -364,7 +378,7 @@ class GizwitsClient(EventEmitter):
         Returns:
             None
         """
-        if device_id not in self.bindings:
+        if device_id not in self.device_manager.devices:
             raise GizwitsDeviceNotBound()
         payload: Dict[str, Any] = {"attrs": dict(attributes)}
         try:
@@ -375,42 +389,3 @@ class GizwitsClient(EventEmitter):
                 "Unknown error occurred while setting device attributes."
             ) from e
         return
-
-    async def Subscribe_to_device_updates(self, device: GizwitsDevice):
-        """
-        Subscribes to updates from a given GizwitsDevice via a WebSocket connection.
-
-        Args:
-            device (GizwitsDevice): The device for which updates are to be subscribed.
-        Returns:
-            None
-        """
-        sockets = self.sockets
-        websocket_info, websocket_url = device.get_websocketConnInfo()
-        if websocket_url in sockets:
-            logger.debug("Using existing websocket for %s", websocket_url)
-            await sockets[websocket_url].add_device_sub(device.device_id)
-        else:
-            logger.debug("Creating websocket for %s", websocket_url)
-            socket = WebSocketConnection(self._session, self, websocket_info)
-            await socket.connect()
-            await socket.login()
-            await socket.add_device_sub(device.device_id)
-            sockets[websocket_url] = socket
-
-    async def got_device_status_update(self, device_update: dict):
-        """
-        Asynchronously takes in a device update and produces a GizwitsDeviceReport.
-
-        Args:
-            device_update (dict): A dictionary containing information about the device.
-        Returns:
-            None
-        """
-        did = device_update["did"]
-        device_info = cast(GizwitsDevice, self.bindings.get(did))
-        device_status = GizwitsDeviceStatus(
-            int(time()), attributes=device_update["attrs"]
-        )
-        result = GizwitsDeviceReport(device_info, device_status)
-        self.emit('device_status_update', result)
