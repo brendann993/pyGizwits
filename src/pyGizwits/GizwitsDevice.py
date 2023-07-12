@@ -14,6 +14,8 @@ _CONNECTIVITY_TIMEOUT = 1000
 
 
 class GizwitsDevice:
+    """Gizwits device."""
+
     def __init__(
         self,
         device_id,
@@ -101,6 +103,15 @@ class GizwitsDevice:
         return await self.client_connection.fetch_device(self.device_id)
 
     async def set_device_attribute(self, key, value):
+        """
+        Set a device attribute.
+
+        Args:
+            key: The key of the attribute to set.
+            value: The value to set for the attribute.
+        Returns:
+            The result of setting the attribute.
+        """
         return await self.client_connection.set_device_attribute(
             self.device_id, key, value
         )

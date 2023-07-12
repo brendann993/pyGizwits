@@ -10,6 +10,8 @@ from pyGizwits.WebSocketConnection import WebSocketConnection
 
 
 class DeviceManager(EventEmitter):
+    """Gizwits device manager."""
+
     def __init__(
         self,
         session: ClientSession,
@@ -37,6 +39,12 @@ class DeviceManager(EventEmitter):
         return True
 
     async def get_devices(self):
+        """
+        Asynchronously retrieves the devices.
+
+        returns:
+            Dict[str, GizwitsDevice]: The bindings obtained from the client.
+        """
         return await self.client.get_bindings(self)
 
     def get_device(self, device_id) -> GizwitsDevice:
