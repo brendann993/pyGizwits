@@ -85,7 +85,7 @@ class GizwitsDevice:
         else:
             logger.debug("Creating websocket for %s", websocket_url)
             socket = WebSocketConnection(
-                self.device_manager.client._session, self.device_manager, websocket_info
+                self.device_manager.client.session, self.device_manager, websocket_info
             )
             await socket.connect()
             await socket.login()

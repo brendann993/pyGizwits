@@ -17,7 +17,6 @@ from pyGizwits.Exceptions import (
 )
 from pyGizwits.GizwitsDevice import GizwitsDevice
 from pyGizwits.logger import logger
-from pyGizwits.WebSocketConnection import WebSocketConnection
 
 
 @dataclass
@@ -52,7 +51,7 @@ class GizwitsClient:
         self.token: str
         self.uid: str
         self.expires_at: int
-        self._session = session
+        self.session = session
         self.device_manager = device_manager
 
     @staticmethod
@@ -99,7 +98,7 @@ class GizwitsClient:
         payload = {"username": username, "password": password, "lang": "en"}
 
         # Send a POST request and get the response
-        async with self._session.post(url, headers=headers, json=payload) as response:
+        async with self.session.post(url, headers=headers, json=payload) as response:
             await raise_for_status(response)
 
             # Extract the token and uid from the response
@@ -172,7 +171,7 @@ class GizwitsClient:
             "X-Gizwits-User-Token": self.token,
         }
 
-        async with self._session.get(url, headers=headers) as response:
+        async with self.session.get(url, headers=headers) as response:
             await raise_for_status(response)
             # Needed as the api does not always set the correct content type
             response_json: Dict[str, Any] = await response.json(content_type=None)
@@ -196,7 +195,7 @@ class GizwitsClient:
             "X-Gizwits-User-Token": self.token,
         }
         headers = {k: v if v is not None else "" for k, v in headers.items()}
-        async with self._session.post(url, headers=headers, json=data) as response:
+        async with self.session.post(url, headers=headers, json=data) as response:
             await raise_for_status(response)
             # Needed as the api does not always set the correct content type
             response_json: Dict[str, Any] = await response.json(content_type=None)
@@ -262,10 +261,7 @@ class GizwitsClient:
                 raise GizwitsException(
                     "Unknown error occurred while retrieving device bindings."
                 ) from e
-        if device_types is None:
-            device_manager.devices = bound_devices
-            return bound_devices
-        else:
+        if device_types is not None:
             filtered_devices = {
                 did: device
                 for did, device in bound_devices.items()
@@ -274,6 +270,9 @@ class GizwitsClient:
             device_manager.devices = filtered_devices
             return filtered_devices
 
+        device_manager.devices = bound_devices
+        return bound_devices
+
     async def refresh_bindings(self, device_manager: 'DeviceManager') -> None:
         """
         Asynchronously refreshes the bindings of the current session
@@ -281,8 +280,8 @@ class GizwitsClient:
         Returns:
             None
         """
-        self.bindings = await self.get_bindings(device_manager)
-        self.device_manager.emit('bindings_refreshed', self.bindings)
+        self.device_manager.devices = await self.get_bindings(device_manager)
+        self.device_manager.emit('bindings_refreshed', self.device_manager.devices)
 
     async def fetch_device(self, device_id: str) -> GizwitsDevice:
         """

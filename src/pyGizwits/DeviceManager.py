@@ -1,5 +1,4 @@
-from time import time
-from typing import TYPE_CHECKING, Dict, cast
+from typing import Dict, cast
 
 from aiohttp import ClientSession
 from pyee.base import EventEmitter
@@ -7,7 +6,6 @@ from pyee.base import EventEmitter
 from pyGizwits.Exceptions import GizwitsDeviceNotBound
 from pyGizwits.GizwitsClient import GizwitsClient
 from pyGizwits.GizwitsDevice import GizwitsDevice
-from pyGizwits.logger import logger
 from pyGizwits.WebSocketConnection import WebSocketConnection
 
 
