@@ -68,6 +68,7 @@ dependencies = [
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/pyGizwits tests}"
 style = [
+  "isort --check --diff {args:.}",
   "black --check --diff {args:.}",
 ]
 fmt = [
